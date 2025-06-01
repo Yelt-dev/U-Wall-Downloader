@@ -20,8 +20,8 @@ if not os.path.exists(DOWNLOAD_FOLDER):
     os.makedirs(DOWNLOAD_FOLDER)
 
 # Check for internet connection
-def has_internet_connection(max_attempts=5, wait=2):
-    test_url = "https://api.unsplash.com"
+def has_internet_connection(max_attempts=15, wait=5):
+    test_url = "https://google.com"
     for attempt in range(1, max_attempts + 1):
         try:
             print(f"Checking internet connection (Attempt {attempt})...")

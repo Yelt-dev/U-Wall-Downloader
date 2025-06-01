@@ -1,4 +1,4 @@
-# Unsplash Wallpaper Downloader
+# UWall Downloader
 
 ### Descripción
 
