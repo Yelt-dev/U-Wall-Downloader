@@ -50,7 +50,81 @@ def save_log(log):
         json.dump(log, f, indent=4)
 
 # Download image
-def download_image():
+def download_image(max_attempts=20):
+    if not has_internet_connection():
+        notification.notify(
+            title="No Internet Connection",
+            message="Could not download the image. Please check your connection.",
+            app_name="Unsplash Downloader",
+            timeout=5
+        )
+        return
+
+    log = load_log()
+    file_name = f"{DOWNLOAD_FOLDER}/{datetime.now().strftime('%Y-%m-%d')}.jpg"
+    
+    if os.path.exists(file_name):
+        print("Today's image is already downloaded.")
+        return
+
+    attempt = 0
+    while attempt < max_attempts:
+        attempt += 1
+        print(f"Attempt #{attempt} to get a new image...")
+
+        url = f"https://api.unsplash.com/photos/random?query={CATEGORY}&orientation={ORIENTATION}&client_id={UNSPLASH_ACCESS_KEY}&w={WIDTH}&h={HEIGHT}"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            image_url = data["urls"]["full"]
+            image_id = data["id"]
+
+            if image_id in log:
+                print("This image has already been downloaded before. Retrying...")
+                continue  # intenta de nuevo
+
+            img_data = requests.get(image_url).content
+            with open(file_name, "wb") as img_file:
+                img_file.write(img_data)
+
+            log[image_id] = {
+                "file": file_name,
+                "date": datetime.now().strftime('%Y-%m-%d'),
+                "url": image_url
+            }
+
+            save_log(log)
+
+            print(f"Image saved to: {file_name}")
+
+            notification.notify(
+                title="Image Downloaded",
+                message="A new image from Unsplash has been saved.",
+                app_name="Unsplash Downloader",
+                timeout=5
+            )
+            return
+
+        except Exception as e:
+            print(f"Error downloading image: {e}")
+            notification.notify(
+                title="Download Error",
+                message=str(e),
+                app_name="Unsplash Downloader",
+                timeout=5
+            )
+            return
+
+    print("No new image could be downloaded after multiple attempts.")
+    notification.notify(
+        title="No New Image",
+        message="All attempted images were already downloaded.",
+        app_name="Unsplash Downloader",
+        timeout=5
+    )
+
     if not has_internet_connection():
         notification.notify(
             title="No Internet Connection",
